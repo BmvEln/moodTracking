@@ -1,0 +1,52 @@
+.AddNote {
+  &Actions {
+  }
+
+  &Moods,
+  &Actions {
+    display: flex;
+    row-gap: 16px;
+    flex-direction: column;
+
+    width: 600px;
+
+    column-gap: 16px;
+    margin-bottom: 36px;
+
+    > div:first-child {
+      font-weight: 600;
+    }
+
+    > div:last-child {
+      display: flex;
+      row-gap: 16px;
+      column-gap: 16px;
+      flex-wrap: wrap;
+    }
+  }
+
+  &Mood,
+  &Action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+    border-radius: 16px;
+    padding: 0 12px;
+    height: 30px;
+    border: 1px solid var(--elDefaultBorderColor);
+
+    background-color: var(--elDefaultBg);
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &.active {
+      background-color: var(--elDefaultBgSelected);
+    }
+
+    &:hover {
+      background-color: var(--elDefaultBgHover);
+    }
+  }
+}

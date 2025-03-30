@@ -1,0 +1,141 @@
+.Notes {
+  &Date {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 20px;
+    margin: 24px 0 24px 0;
+  }
+
+  &Group {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &Warn {
+    margin-top: 40px;
+    font-size: 24px;
+    line-height: 26px;
+  }
+}
+
+.Note {
+  display: flex;
+  flex-direction: column;
+
+  width: 324px;
+  height: 212px;
+
+  padding: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  border: 1px solid var(--cardBorderColor);
+  background-color: var(--cardBg);
+  border-radius: 12px;
+
+  &:hover {
+    background-color: var(--cardBgHover);
+  }
+
+  &Header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 12px;
+
+    > div {
+      display: flex;
+      column-gap: 4px;
+    }
+  }
+
+  &Separate {
+    background-color: #00000060;
+    border-radius: 12px;
+    height: 4px;
+    margin-bottom: 12px;
+    width: 24px;
+  }
+
+  &Desc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 80px;
+
+    margin-bottom: 4px;
+  }
+
+  &Actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  &Window {
+    &Top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      margin-bottom: 24px;
+
+      > div:first-child,
+      > div:last-child {
+        cursor: pointer;
+        width: 17px;
+        height: 17px;
+        transition:
+          transform 0.2s,
+          opacity 0.2s;
+
+        &:hover {
+          transform: translateX(-2px);
+        }
+
+        &:active {
+          transform: translateX(-4px);
+        }
+      }
+
+      > div:last-child {
+        &:hover {
+          transform: translateX(2px);
+        }
+
+        &:active {
+          transform: translateX(4px);
+        }
+      }
+    }
+
+    &Content {
+      > div:first-child {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+
+        > div:first-child {
+          font-size: 28px;
+          line-height: 32px;
+          font-weight: 500;
+        }
+
+        > div:last-child {
+          display: flex;
+          align-items: center;
+          column-gap: 6px;
+        }
+      }
+
+      > textarea {
+        cursor: default;
+        background-color: var(--elDefaultBgHover);
+      }
+    }
+  }
+}

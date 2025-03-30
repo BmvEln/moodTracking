@@ -1,0 +1,36 @@
+.Theme {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  width: 32px;
+  height: 32px;
+
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+  border-radius: 12px;
+  box-sizing: border-box;
+
+  &.light {
+    border: 1px solid #d9dee2ff;
+    background-color: #e8ebed19;
+
+    &:hover {
+      border-color: #cad0d8ff;
+      background-color: #f6f7f8ff;
+    }
+  }
+
+  &.dark {
+    border: 1px solid #3038407f;
+    background-color: #1d212633;
+
+    &:hover {
+      border-color: #303840ff;
+      background-color: #1d2126cc;
+    }
+  }
+}

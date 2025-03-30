@@ -1,0 +1,68 @@
+.Select {
+  position: relative;
+  width: 220px;
+  font-size: 14px;
+  line-height: 16px;
+
+  &__header {
+    display: flex;
+    border-radius: 15px;
+    align-items: center;
+    padding: 4px 12px;
+    height: 30px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    color: #000;
+    background-color: var(--elDefaultBg);
+    border: 1px solid var(--elDefaultBorderColor);
+  }
+
+  &:hover {
+    & .Select__header {
+      background-color: var(--elDefaultBgHover);
+    }
+  }
+
+  &__notDefined {
+    color: var(--elTextColorDefault);
+  }
+
+  &__popUp {
+    display: flex;
+    flex-direction: column;
+
+    overflow: scroll;
+    overflow-x: hidden;
+
+    padding: 12px 0 12px;
+    border-radius: 8px 0 0 8px;
+    background-color: var(--elDefaultBg);
+    box-sizing: border-box;
+    position: absolute;
+    top: calc(40px + 5px);
+    width: 200px;
+    border: 1px solid var(--elDefaultBorderColor);
+    transition:
+      opacity 0.3s,
+      max-height 0.3s;
+    z-index: 5;
+
+    > div {
+      padding: 4px 0 4px;
+      cursor: pointer;
+
+      > div {
+        transition:
+          background-color 0.1s,
+          color 0.1s;
+        padding: 0 8px;
+        overflow: hidden;
+      }
+
+      &:hover {
+        background-color: var(--elDefaultBgHover);
+      }
+    }
+  }
+}

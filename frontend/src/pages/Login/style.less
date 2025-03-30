@@ -1,0 +1,44 @@
+.Login {
+  &Form {
+    width: 400px;
+    height: 400px;
+    background-color: var(--elDefaultBg);
+    border: 1px solid var(--elDefaultBorderColor);
+
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  &Title {
+    font-size: 20px;
+    line-height: 22px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  &Email,
+  &Password {
+    font-size: 12px;
+    line-height: 14px;
+    color: var(--textPrimary);
+
+    > div:first-child {
+      margin-bottom: 6px;
+    }
+  }
+
+  &Email {
+    margin-bottom: 12px;
+  }
+
+  &Password {
+    margin-bottom: 24px;
+
+    + div {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
