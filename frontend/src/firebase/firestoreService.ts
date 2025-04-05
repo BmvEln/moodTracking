@@ -49,7 +49,7 @@ export const deleteNoteFb = async (
     if (userDoc.exists()) {
       // Извлекаем массив items из документа
       const items = userDoc.data()?.items || [];
-      const item = items.find((item: NotePT) => item.id === itemId);
+      const item = items.find((item: NotePT) => item.noteId === itemId);
 
       if (item) {
         // Удаляем элемент из массива
@@ -72,4 +72,42 @@ export const deleteNoteFb = async (
   }
 };
 
-// TODO: updateNoteFb
+export const updateNoteFb = async (
+  userId: string,
+  itemId: string,
+  updatedData: object,
+) => {
+  try {
+    const userRef = doc(db, "users", userId),
+      userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const items = userDoc.data()?.items || [];
+      const itemIdx = items.findIndex((item: NotePT) => item.noteId === itemId);
+
+      if (itemIdx !== -1) {
+        // Создаем новый массив с обновленным элементом
+        const updatedItems = items.map((item: NotePT) =>
+          item.noteId === itemId ? { ...item, ...updatedData } : item,
+        );
+
+        // Обновляем массив items в документе
+        await updateDoc(userRef, {
+          items: updatedItems,
+        });
+
+        console.log("Запись успешно изменена!");
+        return updatedData;
+      } else {
+        console.error("Запись с указанным ID не найдена.");
+        return null;
+      }
+    } else {
+      console.error("Документ пользователя не существует.");
+      return null;
+    }
+  } catch (err) {
+    console.error("Ошибка при изменении записи:", err);
+    return null;
+  }
+};

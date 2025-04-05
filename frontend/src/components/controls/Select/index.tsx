@@ -6,15 +6,19 @@ type SelectProps = {
   variants: { id: number; name: string }[];
   onChange?: (value: number | undefined) => void;
   width: number;
+  curIdx?: number | undefined;
+  withoutNoSelected?: boolean;
 };
 
 function Select({
   variants = [{ id: 1, name: "" }],
   onChange,
   width,
+  curIdx = undefined,
+  withoutNoSelected = false,
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false),
-    [idxItem, setIdxItem] = useState<number | undefined>(undefined),
+    [idxItem, setIdxItem] = useState<number | undefined>(curIdx),
     selectRef = useRef(null),
     handleClickOutside = useCallback((e: MouseEvent) => {
       if (selectRef.current && !selectRef.current.contains(e.target)) {
@@ -22,12 +26,12 @@ function Select({
       }
     }, []),
     handleClickPoint = useCallback(
-      (i: number, id: number, isNotSelected: boolean) => {
-        setIdxItem(isNotSelected ? undefined : i);
+      (i: number, id: number, isNoSelected: boolean) => {
+        setIdxItem(isNoSelected ? undefined : i);
         setIsOpen(false);
 
         if (onChange) {
-          onChange(isNotSelected ? undefined : id);
+          onChange(isNoSelected ? undefined : id);
         }
       },
       [onChange],
@@ -73,14 +77,16 @@ function Select({
 
           return !i ? (
             <>
-              <div
-                key={`${id}-notSelected`}
-                className="Select__point"
-                style={{ pointerEvents }}
-                onClick={() => handleClickPoint(i, id, true)}
-              >
-                <div>Не выбрано</div>
-              </div>
+              {withoutNoSelected ? null : (
+                <div
+                  key={`${id}-noSelected`}
+                  className="Select__point"
+                  style={{ pointerEvents }}
+                  onClick={() => handleClickPoint(i, id, true)}
+                >
+                  <div>Не выбрано</div>
+                </div>
+              )}
               {pointLayout}
             </>
           ) : (

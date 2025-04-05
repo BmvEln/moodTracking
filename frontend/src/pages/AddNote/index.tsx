@@ -55,7 +55,7 @@ function AddNote() {
     }
 
     const newNote = {
-      id: uuidv4(),
+      noteId: uuidv4(),
       date: new Date().toISOString(),
       mood: moodId,
       actions: Array.from(actions as Set<number>).sort((a, b) => a - b),

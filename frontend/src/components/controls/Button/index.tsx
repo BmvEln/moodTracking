@@ -11,6 +11,9 @@ type Props = {
   size?: "md" | "big";
   style?: object;
   className?: string;
+  selected?: boolean;
+  disabled?: boolean;
+  title?: string;
 };
 
 function Button({
@@ -21,10 +24,17 @@ function Button({
   size = "md",
   style,
   className,
+  selected,
+  disabled,
+  title,
 }: Props) {
   return (
     <button
-      className={classNames("Button", theme, className, size)}
+      title={title}
+      className={classNames("Button", theme, className, size, {
+        selected,
+        disabled,
+      })}
       style={{ width, ...style }}
       onClick={onClick}
     >

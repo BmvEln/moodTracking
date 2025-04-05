@@ -20,6 +20,7 @@ type Props = {
   isUnderstand?: boolean;
   width?: number;
   height?: number;
+  btnYesLoading?: boolean;
 };
 
 function Window({
@@ -37,6 +38,7 @@ function Window({
   theme,
   width,
   height,
+  btnYesLoading,
 }: Props) {
   return (
     <div
@@ -78,7 +80,13 @@ function Window({
                 <Button onClick={onClose} width={60} size="big" theme="green">
                   {confirmNo}
                 </Button>
-                <Button onClick={onClickYes} width={60} size="big" theme="pink">
+                <Button
+                  className={btnYesLoading ? "animLoading" : undefined}
+                  onClick={onClickYes}
+                  width={60}
+                  size="big"
+                  theme="pink"
+                >
                   {confirmYes}
                 </Button>
               </div>

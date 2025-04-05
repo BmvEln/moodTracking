@@ -14,6 +14,7 @@ import { EmailAuthProvider, linkWithCredential } from "firebase/auth";
 import Page from "../../components/layout/Page";
 import Input from "../../components/controls/Input";
 import Button from "../../components/controls/Button";
+import { LINK_HISTORY, LINK_HOME } from "../../static/static.tsx";
 
 function Login({ method }: { method: string }) {
   const navigate = useNavigate();
@@ -28,15 +29,19 @@ function Login({ method }: { method: string }) {
       try {
         if (isSignUp) {
           createUserWithEmailAndPassword(auth, email, password).then(() => {
-            navigate("/");
+            navigate(`${LINK_HOME}`);
           });
         } else {
           signInWithEmailAndPassword(auth, email, password).then(() => {
-            navigate("/notes");
+            navigate(`${LINK_HISTORY}`);
           });
         }
       } catch (err) {
-        console.log(err);
+        if (isSignUp) {
+          console.log("Ошибка при регистрации", err);
+        } else {
+          console.log("Ошибка при входе", err);
+        }
       }
     },
     [isSignUp, navigate],
@@ -54,7 +59,7 @@ function Login({ method }: { method: string }) {
           .then((usercred) => {
             const user = usercred.user;
             console.log("Анонимная учетная запись успешно обновлена", user);
-            navigate("/notes");
+            navigate(`${LINK_HISTORY}`);
           })
           .catch((error) => {
             console.warn(
@@ -71,13 +76,15 @@ function Login({ method }: { method: string }) {
     <Page className="Login">
       <form
         className="LoginForm"
-        onSubmit={(e) =>
-          auth?.currentUser?.isAnonymous
-            ? singInAnon(e, email, password)
-            : isSignUp
-              ? handleSubmit(e, email, password)
-              : undefined
-        }
+        onSubmit={(e) => {
+          e.preventDefault();
+
+          if (auth?.currentUser?.isAnonymous) {
+            singInAnon(e, email, password);
+          } else {
+            handleSubmit(e, email, password);
+          }
+        }}
       >
         <div className="LoginTitle">{isSignUp ? "Регистрация" : "Вход"}</div>
 

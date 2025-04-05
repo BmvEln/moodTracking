@@ -48,14 +48,45 @@ button {
     height: 32px;
   }
 
-  // ...
+  &.animLoading {
+    position: relative;
+    &:before {
+      position: absolute;
+      content: "";
+      width: 8px;
+      height: 100%;
+      background-color: #ffffff33;
+      transform: skew(-25deg, 0);
+
+      animation-name: loading;
+      animation-timing-function: linear;
+      animation-duration: 0.7s;
+      animation-iteration-count: infinite;
+    }
+  }
+
+  // Состояния
+
+  &.selected {
+    background-color: var(--elDefaultBgSelected);
+  }
+
+  &.disabled {
+    cursor: default;
+    background-color: var(--elDefaultBgHover);
+  }
 
   // Темы
 
   &.secondary {
+    border: 1px solid var(--elSecondaryBorderColor);
     background-color: var(--elSecondaryBg);
     &:hover:not(.noHover) {
       background-color: var(--elSecondaryBgHover);
+    }
+
+    &.selected {
+      background-color: var(--elSecondaryBgSelected);
     }
   }
 
@@ -73,5 +104,15 @@ button {
     &:hover {
       background-color: #84f884;
     }
+  }
+}
+
+@keyframes loading {
+  to {
+    right: -20%;
+  }
+
+  from {
+    right: 100%;
   }
 }

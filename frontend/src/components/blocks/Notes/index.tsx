@@ -8,17 +8,21 @@ import {
 import "./style.less";
 
 import { ACTIONS, MOODS } from "../../../static/static.tsx";
-import { NotePT } from "../../../static/types.tsx";
+import { ActionPT, NotePT } from "../../../static/types.tsx";
 import { IMG } from "../../../static/img.ts";
 
-import { deleteNote } from "../../../redux/slices/notesSlice.tsx";
-import { deleteNoteFb } from "../../../firebase/firestoreService.ts";
+import { deleteNote, updateNote } from "../../../redux/slices/notesSlice.tsx";
+import {
+  deleteNoteFb,
+  updateNoteFb,
+} from "../../../firebase/firestoreService.ts";
 import { getDate } from "../../../functions/functions.tsx";
 
 import Button from "../../controls/Button";
 import Window from "../../layout/Window";
+import Select from "../../controls/Select";
 
-const ICONS = {
+const ICONS: Record<string, React.ReactNode> = {
   delete: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -70,27 +74,130 @@ const ICONS = {
   ),
 };
 
-function Note({ id, mood, actions, desc, date }: NotePT) {
+type TextAreaProps = {
+  editMode: boolean;
+  descL: string;
+  setDescL: (v: string) => void;
+  desc: string;
+};
+
+function TextArea({ editMode, descL, setDescL, desc }: TextAreaProps) {
+  return (
+    <textarea
+      className="textarea"
+      style={{
+        width: "100%",
+        height: "50px",
+        cursor: ["default", "text"][Number(editMode)],
+        backgroundColor: ["var(--elDefaultBgHover)", "var(--elDefaultBg)"][
+          Number(editMode)
+        ],
+      }}
+      onChange={editMode ? (e) => setDescL(e.target.value) : undefined}
+      readOnly={!editMode}
+      value={editMode ? descL : desc || "Нет мыслей..."}
+    />
+  );
+}
+
+function Note({ noteId, mood, actions, desc, date }: NotePT) {
   const dispatch = useAppDispatch(),
     { userId } = useAppSelector((state: RootState) => state.user),
     { hours, minutes } = getDate(date),
-    [noteWindow, setNoteWindow] = useState(false);
+    [noteWindow, setNoteWindow] = useState(false),
+    [confirmWindow, setConfirmWindow] = useState(false),
+    [editMode, setEditMode] = useState(false),
+    [isLoading, setLoading] = useState(false);
+
+  const [moodIdL, setMoodIdL] = useState<number | undefined>(mood);
+  const [actionsL, setActionsL] = useState(new Set(actions));
+  const [descL, setDescL] = useState(desc);
+
+  const resetState = useCallback(() => {
+    setMoodIdL(mood);
+    setDescL(desc);
+    setActionsL(new Set(actions));
+  }, [actions, desc, mood]);
 
   const handleDeleteNote = useCallback(async () => {
     if (!userId) {
-      console.error("Пользователь с таким id не определен!");
+      console.error("Войдите, чтобы создать запись!");
       return;
     }
 
     try {
-      const deletedNote = await deleteNoteFb(userId, id);
+      const deletedNote = await deleteNoteFb(userId, noteId);
       if (deletedNote) {
-        dispatch(deleteNote(id));
+        dispatch(deleteNote(noteId));
+      }
+    } catch (err) {
+      console.error("Ошибка при удалении заметки", err);
+    }
+  }, [dispatch, noteId, userId]);
+
+  const handleUpdateNote = useCallback(async () => {
+    if (!userId) {
+      console.error("Войдите, чтобы создать запись!");
+      return;
+    }
+
+    if (!moodIdL) {
+      console.error("Не выбрано настроение!");
+      return;
+    }
+
+    const noteData = {
+      mood: moodIdL,
+      actions: Array.from(actionsL).sort((a, b) => a - b),
+      desc: descL || "",
+    };
+
+    try {
+      const updatedNote = await updateNoteFb(userId, noteId, noteData);
+      if (updatedNote) {
+        dispatch(updateNote({ noteId, note: noteData }));
+        resetState();
+        setNoteWindow(false);
+        setEditMode(false);
       }
     } catch (err) {
       console.error(err);
     }
-  }, [dispatch, id, userId]);
+  }, [userId, moodIdL, actionsL, descL, noteId, dispatch, resetState]);
+
+  const handleAction = useCallback(
+    (id: number) => {
+      if (actionsL.has(id)) {
+        actionsL.delete(id);
+
+        setActionsL(new Set(actionsL));
+
+        return;
+      }
+
+      setActionsL(new Set(actionsL.add(id)));
+    },
+    [actionsL],
+  );
+
+  const handleClickYes = useCallback(async () => {
+    setLoading(true);
+    // Если юзер активировал окно в режиме редактирования,
+    // значит он хочет обновить запись (+ в этом режиме не удаляются записи)
+    if (editMode) {
+      await handleUpdateNote();
+    } else {
+      await handleDeleteNote();
+    }
+
+    setLoading(false);
+    setConfirmWindow(false);
+  }, [editMode, handleDeleteNote, handleUpdateNote]);
+
+  if (!mood || !actions) {
+    console.error("В записи отсутствует mood или actions");
+    return;
+  }
 
   return (
     <>
@@ -101,6 +208,7 @@ function Note({ id, mood, actions, desc, date }: NotePT) {
             closeBtn = target.classList.contains("Button");
 
           if (!closeBtn) {
+            resetState();
             setNoteWindow(true);
           }
         }}
@@ -115,8 +223,17 @@ function Note({ id, mood, actions, desc, date }: NotePT) {
           </div>
 
           <div>
-            <Button theme="secondary">Изменить</Button>
-            <Button className="" theme="secondary" onClick={handleDeleteNote}>
+            <Button
+              theme="secondary"
+              onClick={() => {
+                setEditMode(true);
+                resetState();
+                setNoteWindow(true);
+              }}
+            >
+              Изменить
+            </Button>
+            <Button theme="secondary" onClick={() => setConfirmWindow(true)}>
               X
             </Button>
           </div>
@@ -150,7 +267,15 @@ function Note({ id, mood, actions, desc, date }: NotePT) {
         </div>
       </div>
 
-      <Window open={noteWindow} onClose={() => setNoteWindow(false)} hideClose>
+      <Window
+        open={noteWindow}
+        onClose={() => {
+          console.log(123);
+          setEditMode(false);
+          setNoteWindow(false);
+        }}
+        hideClose
+      >
         <div className="NoteWindow">
           <div className="NoteWindowTop">
             <div>{ICONS.arrowLeft}</div>
@@ -162,56 +287,115 @@ function Note({ id, mood, actions, desc, date }: NotePT) {
 
           <div className="NoteWindowContent">
             <div>
-              <div>{MOODS[mood - 1].name}</div>
+              {editMode ? (
+                <Select
+                  width={150}
+                  withoutNoSelected
+                  // Гарантируем, что не будет undefined
+                  curIdx={(moodIdL || 1) - 1}
+                  onChange={(v) => setMoodIdL(v)}
+                  variants={MOODS.map(
+                    ({ id, name }: { id: number; name: string }) => ({
+                      id,
+                      name,
+                    }),
+                  )}
+                />
+              ) : (
+                <div>{MOODS[mood - 1].name}</div>
+              )}
 
               <div>
-                <Button className="icon" theme="secondary">
-                  {ICONS.edit}
-                </Button>
-                <Button className="icon" theme="secondary">
-                  {ICONS.delete}
-                </Button>
+                {editMode ? (
+                  <Button
+                    theme="secondary"
+                    onClick={() => setConfirmWindow(true)}
+                  >
+                    Обновить
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      className="icon"
+                      onClick={() => {
+                        setEditMode(!editMode);
+
+                        resetState();
+                      }}
+                      theme="secondary"
+                    >
+                      {ICONS.edit}
+                    </Button>
+
+                    <Button
+                      className="icon"
+                      theme="secondary"
+                      onClick={() => setConfirmWindow(true)}
+                    >
+                      {ICONS.delete}
+                    </Button>
+                  </>
+                )}
+
                 <Button
                   className="icon"
                   theme="secondary"
-                  onClick={() => setNoteWindow(false)}
+                  onClick={() => {
+                    setNoteWindow(false);
+                    setEditMode(false);
+
+                    resetState();
+                  }}
                 >
                   X
                 </Button>
               </div>
             </div>
 
-            <textarea
-              className="textarea"
-              style={{ width: "100%", height: "50px" }}
-              // onChange={(e) => setTextarea(e.target.value)}
-              readOnly={true}
-              placeholder="Поделись дополнительными мыслями..."
-              value={desc || "Нет мыслей..."}
+            <TextArea
+              editMode={editMode}
+              descL={descL}
+              setDescL={setDescL}
+              desc={desc}
             />
           </div>
 
           <div className="NoteActions">
-            {actions.map((action: number, i: number) => {
-              return (
-                <Button
-                  key={i}
-                  theme="secondary"
-                  className="noHover"
-                  style={{ cursor: "default" }}
-                >
-                  {ACTIONS[action - 1].name}
-                </Button>
-              );
-            })}
+            {editMode
+              ? ACTIONS.map(({ id, name }: ActionPT) => (
+                  <Button
+                    key={id}
+                    onClick={() => handleAction(id)}
+                    selected={Array.from(actionsL).includes(id)}
+                  >
+                    {name}
+                  </Button>
+                ))
+              : actions.map((action: number, i: number) => (
+                  <Button key={i} disabled>
+                    {ACTIONS[action - 1].name}
+                  </Button>
+                ))}
           </div>
         </div>
       </Window>
+
+      <Window
+        open={confirmWindow}
+        btnYesLoading={isLoading}
+        onClose={() => setConfirmWindow(false)}
+        confirm={`Вы точно хотите ${editMode ? "ОБНОВИТЬ" : "УДАЛИТЬ"}  заметку?`}
+        onClickYes={handleClickYes}
+      />
     </>
   );
 }
 
-function Notes({ data }: { data: Record<string, NotePT[]> }) {
+type NotesProps = {
+  data: Record<string, NotePT[]>;
+};
+
+function Notes({ data }: NotesProps) {
   return (
     <div className="Notes">
       {Object.entries(data).map(([key, value], i: number) => {
@@ -221,7 +405,7 @@ function Notes({ data }: { data: Record<string, NotePT[]> }) {
 
             <div className="NotesGroup">
               {value.map((item) => (
-                <Note key={item.id} {...item} />
+                <Note key={item.noteId} {...item} />
               ))}
             </div>
           </React.Fragment>

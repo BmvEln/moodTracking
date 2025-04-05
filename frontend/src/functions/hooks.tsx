@@ -67,7 +67,9 @@ export function useFilteredNotes(notes: NotePT[]) {
       if (state.has(v)) {
         state.delete(v);
 
-        return setState(new Set(state));
+        setState(new Set(state));
+
+        return;
       }
 
       setState(new Set(state.add(v)));

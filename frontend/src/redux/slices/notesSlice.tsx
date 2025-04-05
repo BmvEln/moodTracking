@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { NotePT } from "../../static/types.tsx";
+
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type NotesState = {
   notes: NotePT[];
@@ -20,11 +21,29 @@ export const notesSlice = createSlice({
       state.notes.push(action.payload);
     },
     deleteNote: (state, action: PayloadAction<string>) => {
-      state.notes = state.notes.filter((note) => note.id !== action.payload);
+      state.notes = state.notes.filter(
+        (note) => note.noteId !== action.payload,
+      );
     },
-    //   TODO: updateNote
+    updateNote: (
+      state,
+      action: PayloadAction<{
+        noteId: string;
+        note: {
+          mood: number;
+          actions: number[];
+          desc: string;
+        };
+      }>,
+    ) => {
+      state.notes = state.notes.map((note: NotePT) =>
+        note.noteId === action.payload.noteId
+          ? { ...note, ...action.payload.note }
+          : note,
+      );
+    },
   },
 });
 
-export const { setNotes, addNote, deleteNote } = notesSlice.actions;
+export const { setNotes, addNote, deleteNote, updateNote } = notesSlice.actions;
 export default notesSlice.reducer;
