@@ -218,15 +218,15 @@ function NoteWindows({
               ) : (
                 <div>{MOODS[mood - 1].name}</div>
               )}
-            </div>
 
-            <NoteWindowBtns
-              editMode={editMode}
-              setConfirmWindow={setConfirmWindow}
-              setEditMode={setEditMode}
-              resetState={resetState}
-              setNoteWindow={setNoteWindow}
-            />
+              <NoteWindowBtns
+                editMode={editMode}
+                setConfirmWindow={setConfirmWindow}
+                setEditMode={setEditMode}
+                resetState={resetState}
+                setNoteWindow={setNoteWindow}
+              />
+            </div>
 
             <TextArea
               editMode={editMode}
