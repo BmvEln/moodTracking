@@ -78,7 +78,7 @@ function AddNote() {
       />
 
       <div
-        className="AddNoteBtn"
+        className="AddNoteBtnContainer"
         style={{
           width: "450px",
         }}
