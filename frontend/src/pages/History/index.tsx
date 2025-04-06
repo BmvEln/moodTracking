@@ -14,18 +14,17 @@ import Select from "../../components/controls/Select";
 import Notes from "../../components/blocks/Notes";
 
 function History() {
-  const { notes } = useAppSelector((state: RootState) => state.notes);
-
-  const {
-    search,
-    setSearch,
-    moodFilter,
-    setMoodFilter,
-    actionFilter,
-    setActionFilter,
-    groupedNotes,
-    updateFilter,
-  } = useFilteredNotes(notes || []);
+  const { notes } = useAppSelector((state: RootState) => state.notes),
+    {
+      search,
+      setSearch,
+      moodFilter,
+      setMoodFilter,
+      actionFilter,
+      setActionFilter,
+      groupedNotes,
+      updateFilter,
+    } = useFilteredNotes(notes || []);
 
   const handleMoodChange = useCallback(
     (v: number | undefined) => {
@@ -40,6 +39,8 @@ function History() {
     },
     [actionFilter, setActionFilter, updateFilter],
   );
+
+  console.log("History");
 
   return (
     <Page className="History">

@@ -20,11 +20,14 @@ function Select({
   const [isOpen, setIsOpen] = useState(false),
     [idxItem, setIdxItem] = useState<number | undefined>(curIdx),
     selectRef = useRef(null),
-    handleClickOutside = useCallback((e: MouseEvent) => {
-      if (selectRef.current && !selectRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    }, []),
+    handleClickOutside = useCallback(
+      (e: MouseEvent) => {
+        if (selectRef.current && !selectRef.current.contains(e.target)) {
+          setIsOpen(false);
+        }
+      },
+      [selectRef],
+    ),
     handleClickPoint = useCallback(
       (i: number, id: number, isNoSelected: boolean) => {
         setIdxItem(isNoSelected ? undefined : i);
@@ -45,8 +48,13 @@ function Select({
   }, [handleClickOutside]);
 
   return (
-    <div className="Select" ref={selectRef} style={{ width }}>
-      <div className="Select__header" onClick={() => setIsOpen(!isOpen)}>
+    <div
+      className="Select"
+      ref={selectRef}
+      style={{ width }}
+      onClick={() => setIsOpen(!isOpen)}
+    >
+      <div className="Select__header">
         {typeof idxItem === "number" ? (
           variants[idxItem].name
         ) : (

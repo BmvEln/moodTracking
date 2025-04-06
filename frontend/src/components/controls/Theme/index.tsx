@@ -1,16 +1,16 @@
-import classNames from "classnames";
-import { useEffect } from "react";
-
-import "./style.less";
-
-import { setTheme } from "../../../redux/slices/themeSlice.tsx";
 import {
   RootState,
   useAppDispatch,
   useAppSelector,
 } from "../../../redux/store.tsx";
+import classNames from "classnames";
+import React, { useEffect } from "react";
 
-const IMGS = {
+import "./style.less";
+
+import { setTheme } from "../../../redux/slices/themeSlice.tsx";
+
+const IMGS: Record<string, React.ReactNode> = {
   light: (
     <svg
       width="18"

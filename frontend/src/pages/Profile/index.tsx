@@ -17,17 +17,21 @@ function Profile() {
   const dispatch = useAppDispatch(),
     navigate = useNavigate(),
     userSingOut = useCallback(() => {
-      signOut(auth).then(() => {
-        dispatch(
-          setUser({
-            id: null,
-            email: null,
-            token: null,
-          }),
-        );
+      signOut(auth)
+        .then(() => {
+          dispatch(
+            setUser({
+              id: null,
+              email: null,
+              token: null,
+            }),
+          );
 
-        navigate("/");
-      });
+          navigate("/");
+        })
+        .catch((err) => {
+          console.error("Ошибка при выходе из аккаунта", err);
+        });
     }, [dispatch, navigate]);
 
   return (
@@ -78,7 +82,7 @@ function Profile() {
 
             <div className="ProfileSeparator" />
 
-            <Button onClick={() => userSingOut()}>Выйти из кабинета</Button>
+            <Button onClick={userSingOut}>Выйти из кабинета</Button>
           </>
         )}
       </div>

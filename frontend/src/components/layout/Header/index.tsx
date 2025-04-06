@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { RootState, useAppSelector } from "../../../redux/store.tsx";
 
 import "./style.less";
 
@@ -8,11 +9,14 @@ import {
   LINK_HOME,
   LINK_PROFILE,
   LINK_SING_IN,
+  LINK_SING_UP,
 } from "../../../static/static.tsx";
 
 import Theme from "../../controls/Theme";
 
 function Header() {
+  const { email } = useAppSelector((state: RootState) => state.user);
+
   return (
     <div className="Header">
       <div className="HeaderContent">
@@ -22,11 +26,20 @@ function Header() {
 
         <div className="HeaderLinks">
           <Theme />
-          <Link to=".">Home</Link>
-          <Link to={LINK_ADD_NOTE}>AddNote</Link>
-          <Link to={LINK_HISTORY}>History</Link>
-          <Link to={LINK_SING_IN}>Login</Link>
-          <Link to={LINK_PROFILE}>Profile</Link>
+          <Link to={LINK_HOME}>Главная</Link>
+          <Link to={LINK_ADD_NOTE}>Запись</Link>
+          <Link to={LINK_HISTORY}>История</Link>
+
+          {email ? (
+            <Link to={LINK_PROFILE}>
+              <div className="HeaderProfile">{email.slice(0, 1)}</div>
+            </Link>
+          ) : (
+            <>
+              <Link to={LINK_SING_IN}>Вход</Link>
+              <Link to={LINK_SING_UP}>Регистрация</Link>
+            </>
+          )}
         </div>
       </div>
     </div>

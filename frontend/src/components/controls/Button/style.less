@@ -26,6 +26,7 @@ button {
     background-color 0.3s,
     opacity 0.2s;
   user-select: none;
+  overflow: hidden;
 
   &:hover:not(.noHover) {
     background-color: var(--elDefaultBgHover);
@@ -55,7 +56,7 @@ button {
       content: "";
       width: 8px;
       height: 100%;
-      background-color: #ffffff33;
+      background-color: var(--elDefaultLoading);
       transform: skew(-25deg, 0);
 
       animation-name: loading;
@@ -91,18 +92,22 @@ button {
   }
 
   &.pink {
-    background-color: #f88484;
-    color: #450808;
+    background-color: #f7786b;
+    color: var(--textPrimary);
     &:hover {
-      background-color: #f88484;
+      background-color: #e66a5f;
+    }
+
+    &.animLoading:before {
+      background-color: #ffffff33;
     }
   }
 
   &.green {
-    background-color: #84f884;
-    color: #084508;
+    background-color: #d1ff97;
+    color: var(--textPrimary);
     &:hover {
-      background-color: #84f884;
+      background-color: #c2e68a;
     }
   }
 }

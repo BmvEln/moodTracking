@@ -1,9 +1,4 @@
-import React, { useCallback, useState } from "react";
-import {
-  RootState,
-  useAppDispatch,
-  useAppSelector,
-} from "../../../redux/store.tsx";
+import React, { useEffect, useState } from "react";
 
 import "./style.less";
 
@@ -11,12 +6,8 @@ import { ACTIONS, MOODS } from "../../../static/static.tsx";
 import { ActionPT, NotePT } from "../../../static/types.tsx";
 import { IMG } from "../../../static/img.ts";
 
-import { deleteNote, updateNote } from "../../../redux/slices/notesSlice.tsx";
-import {
-  deleteNoteFb,
-  updateNoteFb,
-} from "../../../firebase/firestoreService.ts";
 import { getDate } from "../../../functions/functions.tsx";
+import { useNoteWindows } from "../../../functions/hooks.tsx";
 
 import Button from "../../controls/Button";
 import Window from "../../layout/Window";
@@ -74,203 +65,126 @@ const ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-type TextAreaProps = {
+type NoteWindowBtnsProps = {
   editMode: boolean;
-  descL: string;
-  setDescL: (v: string) => void;
-  desc: string;
+  setConfirmWindow: (v: boolean) => void;
+  setEditMode: (v: boolean) => void;
+  resetState: () => void;
+  setNoteWindow: (v: boolean) => void;
 };
 
-function TextArea({ editMode, descL, setDescL, desc }: TextAreaProps) {
+function NoteWindowBtns({
+  editMode,
+  setConfirmWindow,
+  setEditMode,
+  resetState,
+  setNoteWindow,
+}: NoteWindowBtnsProps) {
   return (
-    <textarea
-      className="textarea"
-      style={{
-        width: "100%",
-        height: "50px",
-        cursor: ["default", "text"][Number(editMode)],
-        backgroundColor: ["var(--elDefaultBgHover)", "var(--elDefaultBg)"][
-          Number(editMode)
-        ],
-      }}
-      onChange={editMode ? (e) => setDescL(e.target.value) : undefined}
-      readOnly={!editMode}
-      value={editMode ? descL : desc || "Нет мыслей..."}
-    />
+    <div>
+      {editMode ? (
+        <Button theme="secondary" onClick={() => setConfirmWindow(true)}>
+          Обновить
+        </Button>
+      ) : (
+        <>
+          <Button
+            className="icon"
+            onClick={() => {
+              setEditMode(!editMode);
+
+              resetState();
+            }}
+            theme="secondary"
+          >
+            {ICONS.edit}
+          </Button>
+
+          <Button
+            className="icon"
+            theme="secondary"
+            onClick={() => setConfirmWindow(true)}
+          >
+            {ICONS.delete}
+          </Button>
+        </>
+      )}
+
+      <Button
+        className="icon"
+        theme="secondary"
+        onClick={() => {
+          setNoteWindow(false);
+          setEditMode(false);
+
+          resetState();
+        }}
+      >
+        X
+      </Button>
+    </div>
   );
 }
 
-function Note({ noteId, mood, actions, desc, date }: NotePT) {
-  const dispatch = useAppDispatch(),
-    { userId } = useAppSelector((state: RootState) => state.user),
-    { hours, minutes } = getDate(date),
-    [noteWindow, setNoteWindow] = useState(false),
-    [confirmWindow, setConfirmWindow] = useState(false),
-    [editMode, setEditMode] = useState(false),
-    [isLoading, setLoading] = useState(false);
+type WindowContentProps = {
+  noteId: string;
+  editMode: boolean;
+  mood: number;
+  setEditMode: (v: boolean) => void;
+  actions: number[];
+  desc: string;
+  hours: string;
+  minutes: string;
+  confirmWindow: boolean;
+  setConfirmWindow: (v: boolean) => void;
+  noteWindow: boolean;
+  setNoteWindow: (v: boolean) => void;
+};
 
-  const [moodIdL, setMoodIdL] = useState<number | undefined>(mood);
-  const [actionsL, setActionsL] = useState(new Set(actions));
-  const [descL, setDescL] = useState(desc);
-
-  const resetState = useCallback(() => {
-    setMoodIdL(mood);
-    setDescL(desc);
-    setActionsL(new Set(actions));
-  }, [actions, desc, mood]);
-
-  const handleDeleteNote = useCallback(async () => {
-    if (!userId) {
-      console.error("Войдите, чтобы создать запись!");
-      return;
-    }
-
-    try {
-      const deletedNote = await deleteNoteFb(userId, noteId);
-      if (deletedNote) {
-        dispatch(deleteNote(noteId));
-      }
-    } catch (err) {
-      console.error("Ошибка при удалении заметки", err);
-    }
-  }, [dispatch, noteId, userId]);
-
-  const handleUpdateNote = useCallback(async () => {
-    if (!userId) {
-      console.error("Войдите, чтобы создать запись!");
-      return;
-    }
-
-    if (!moodIdL) {
-      console.error("Не выбрано настроение!");
-      return;
-    }
-
-    const noteData = {
-      mood: moodIdL,
-      actions: Array.from(actionsL).sort((a, b) => a - b),
-      desc: descL || "",
-    };
-
-    try {
-      const updatedNote = await updateNoteFb(userId, noteId, noteData);
-      if (updatedNote) {
-        dispatch(updateNote({ noteId, note: noteData }));
-        resetState();
-        setNoteWindow(false);
-        setEditMode(false);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [userId, moodIdL, actionsL, descL, noteId, dispatch, resetState]);
-
-  const handleAction = useCallback(
-    (id: number) => {
-      if (actionsL.has(id)) {
-        actionsL.delete(id);
-
-        setActionsL(new Set(actionsL));
-
-        return;
-      }
-
-      setActionsL(new Set(actionsL.add(id)));
-    },
-    [actionsL],
+function NoteWindows({
+  noteId,
+  editMode,
+  mood,
+  setEditMode,
+  actions,
+  desc,
+  hours,
+  minutes,
+  confirmWindow,
+  setConfirmWindow,
+  noteWindow,
+  setNoteWindow,
+}: WindowContentProps) {
+  const {
+    moodIdL,
+    setMoodIdL,
+    actionsL,
+    descL,
+    setDescL,
+    isLoading,
+    handleAction,
+    handleClickYes,
+    resetState,
+  } = useNoteWindows(
+    noteId,
+    mood,
+    actions,
+    desc,
+    setNoteWindow,
+    editMode,
+    setEditMode,
+    setConfirmWindow,
   );
 
-  const handleClickYes = useCallback(async () => {
-    setLoading(true);
-    // Если юзер активировал окно в режиме редактирования,
-    // значит он хочет обновить запись (+ в этом режиме не удаляются записи)
-    if (editMode) {
-      await handleUpdateNote();
-    } else {
-      await handleDeleteNote();
-    }
-
-    setLoading(false);
-    setConfirmWindow(false);
-  }, [editMode, handleDeleteNote, handleUpdateNote]);
-
-  if (!mood || !actions) {
-    console.error("В записи отсутствует mood или actions");
-    return;
-  }
+  useEffect(() => {
+    resetState();
+  }, [resetState, noteWindow]);
 
   return (
     <>
-      <div
-        className="Note"
-        onClick={(e) => {
-          const target = e.target as HTMLElement,
-            closeBtn = target.classList.contains("Button");
-
-          if (!closeBtn) {
-            resetState();
-            setNoteWindow(true);
-          }
-        }}
-      >
-        <div className="NoteHeader">
-          <div>
-            <div>{MOODS[mood - 1].name}</div>
-            <div>•</div>
-            <div>
-              {hours}:{minutes}
-            </div>
-          </div>
-
-          <div>
-            <Button
-              theme="secondary"
-              onClick={() => {
-                setEditMode(true);
-                resetState();
-                setNoteWindow(true);
-              }}
-            >
-              Изменить
-            </Button>
-            <Button theme="secondary" onClick={() => setConfirmWindow(true)}>
-              X
-            </Button>
-          </div>
-        </div>
-
-        <div className="NoteSeparate" />
-
-        <div className="NoteDesc">{desc || "Нет мыслей..."}</div>
-
-        <div className="NoteActions">
-          {actions.map((action: number, i: number) => {
-            if (i > 2) {
-              return null;
-            }
-
-            return (
-              <Button
-                key={i}
-                theme="secondary"
-                className="noHover"
-                style={{ cursor: i < 2 ? "default" : "pointer" }}
-              >
-                {i < 2 ? (
-                  ACTIONS[action - 1].name
-                ) : (
-                  <img src={IMG.seeMore} width={30} height={30} alt="" />
-                )}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
       <Window
         open={noteWindow}
         onClose={() => {
-          console.log(123);
           setEditMode(false);
           setNoteWindow(false);
         }}
@@ -304,53 +218,15 @@ function Note({ noteId, mood, actions, desc, date }: NotePT) {
               ) : (
                 <div>{MOODS[mood - 1].name}</div>
               )}
-
-              <div>
-                {editMode ? (
-                  <Button
-                    theme="secondary"
-                    onClick={() => setConfirmWindow(true)}
-                  >
-                    Обновить
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      className="icon"
-                      onClick={() => {
-                        setEditMode(!editMode);
-
-                        resetState();
-                      }}
-                      theme="secondary"
-                    >
-                      {ICONS.edit}
-                    </Button>
-
-                    <Button
-                      className="icon"
-                      theme="secondary"
-                      onClick={() => setConfirmWindow(true)}
-                    >
-                      {ICONS.delete}
-                    </Button>
-                  </>
-                )}
-
-                <Button
-                  className="icon"
-                  theme="secondary"
-                  onClick={() => {
-                    setNoteWindow(false);
-                    setEditMode(false);
-
-                    resetState();
-                  }}
-                >
-                  X
-                </Button>
-              </div>
             </div>
+
+            <NoteWindowBtns
+              editMode={editMode}
+              setConfirmWindow={setConfirmWindow}
+              setEditMode={setEditMode}
+              resetState={resetState}
+              setNoteWindow={setNoteWindow}
+            />
 
             <TextArea
               editMode={editMode}
@@ -386,6 +262,160 @@ function Note({ noteId, mood, actions, desc, date }: NotePT) {
         onClose={() => setConfirmWindow(false)}
         confirm={`Вы точно хотите ${editMode ? "ОБНОВИТЬ" : "УДАЛИТЬ"}  заметку?`}
         onClickYes={handleClickYes}
+      />
+    </>
+  );
+}
+
+type NoteHeaderProps = {
+  mood: number;
+  date: string;
+  setEditMode: (v: boolean) => void;
+  setNoteWindow: (v: boolean) => void;
+  setConfirmWindow: (v: boolean) => void;
+  hours: string;
+  minutes: string;
+};
+
+function NoteHeader({
+  mood,
+  setEditMode,
+  setNoteWindow,
+  setConfirmWindow,
+  hours,
+  minutes,
+}: NoteHeaderProps) {
+  return (
+    <div className="NoteHeader">
+      <div>
+        <div>{MOODS[mood - 1].name}</div>
+        <div>•</div>
+        <div>
+          {hours}:{minutes}
+        </div>
+      </div>
+
+      <div>
+        <Button
+          theme="secondary"
+          onClick={() => {
+            setEditMode(true);
+            setNoteWindow(true);
+          }}
+        >
+          Изменить
+        </Button>
+        <Button theme="secondary" onClick={() => setConfirmWindow(true)}>
+          X
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+type TextAreaProps = {
+  editMode: boolean;
+  descL: string;
+  setDescL: (v: string) => void;
+  desc: string;
+};
+
+function TextArea({ editMode, descL, setDescL, desc }: TextAreaProps) {
+  return (
+    <textarea
+      className="textarea"
+      style={{
+        width: "100%",
+        height: "50px",
+        cursor: ["default", "text"][Number(editMode)],
+        backgroundColor: ["var(--elDefaultBgHover)", "var(--elDefaultBg)"][
+          Number(editMode)
+        ],
+      }}
+      onChange={editMode ? (e) => setDescL(e.target.value) : undefined}
+      readOnly={!editMode}
+      value={editMode ? descL : desc || "Нет мыслей..."}
+    />
+  );
+}
+
+function Note({ noteId, mood, actions, desc, date }: NotePT) {
+  const { hours, minutes } = getDate(date);
+
+  const [confirmWindow, setConfirmWindow] = useState(false),
+    [noteWindow, setNoteWindow] = useState(false),
+    [editMode, setEditMode] = useState(false);
+
+  if (!mood || !actions) {
+    console.error("В записи отсутствует mood или actions");
+    return;
+  }
+
+  return (
+    <>
+      <div
+        className="Note"
+        onClick={(e) => {
+          const target = e.target as HTMLElement,
+            closeBtn = target.classList.contains("Button");
+
+          if (!closeBtn) {
+            setNoteWindow(true);
+          }
+        }}
+      >
+        <NoteHeader
+          mood={mood}
+          date={date}
+          setEditMode={setEditMode}
+          setNoteWindow={setNoteWindow}
+          setConfirmWindow={setConfirmWindow}
+          hours={hours}
+          minutes={minutes}
+        />
+
+        <div className="NoteSeparate" />
+
+        <div className="NoteDesc">{desc || "Нет мыслей..."}</div>
+
+        <div className="NoteActions">
+          {actions.map((action: number, i: number) => {
+            if (i > 2) {
+              return null;
+            }
+
+            return (
+              <Button
+                key={i}
+                theme="secondary"
+                className="noHover"
+                style={{ cursor: i < 2 ? "default" : "pointer" }}
+              >
+                {i < 2 ? (
+                  ACTIONS[action - 1].name
+                ) : (
+                  // TODO: Нажимается только на часть в картинкой
+                  <img src={IMG.seeMore} width={30} height={30} alt="" />
+                )}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <NoteWindows
+        noteWindow={noteWindow}
+        setNoteWindow={setNoteWindow}
+        noteId={noteId}
+        editMode={editMode}
+        mood={mood}
+        confirmWindow={confirmWindow}
+        setConfirmWindow={setConfirmWindow}
+        setEditMode={setEditMode}
+        desc={desc}
+        hours={hours}
+        minutes={minutes}
+        actions={actions}
       />
     </>
   );
